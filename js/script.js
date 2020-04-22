@@ -1,6 +1,7 @@
 const GAMEBOARD_WIDTH = 512;
 const GAMEBOARD_HEIGHT = 512;
-const PIPE_GAP = 85;
+const FOREGROUND_HEIGHT = 80;
+const PIPE_GAP = 150;
 const GRAVITY = 1.5;
 const JUMP = 25;
 const video = document.getElementById("video");
@@ -24,9 +25,9 @@ const SOUTH_PIPE_IMAGE_SRC_SRC = "./images/pipeSouth.png";
 const DEFAULT_BIRD_Y = 150;
 const DEFAULT_BIRD_X = 10;
 
-function Bird() {
-  this.xBird = DEFAULT_BIRD_X;
-  this.yBird = DEFAULT_BIRD_Y;
+function Bird(xBird, yBird) {
+  this.xBird = xBird;
+  this.yBird = yBird;
   this.birdImage = new Image();
   this.birdImage.src = BIRD_IMAGE_SRC;
   this.jump = (event) => {
@@ -41,9 +42,12 @@ function Pipe(cvs) {
   this.northPipeImage.src = NORTH_PIPE_IMAGE_SRC;
   this.southPipeImage = new Image();
   this.southPipeImage.src = SOUTH_PIPE_IMAGE_SRC_SRC;
-  this.xPipe = GAMEBOARD_WIDTH;
-  this.yPipe =
-    Math.random() * this.northPipeImage.height - this.northPipeImage.height;
+  this.xSouthPipe = GAMEBOARD_WIDTH;
+  this.ySouthPipe =
+    Math.random() * (GAMEBOARD_HEIGHT - FOREGROUND_HEIGHT - PIPE_GAP) +
+    PIPE_GAP;
+  this.xNorthPipe = GAMEBOARD_WIDTH;
+  this.yNorthPipe = 0;
 }
 
 function Player() {
@@ -70,57 +74,62 @@ function Board(cvs, bird, pipe, player) {
     this.ctx.drawImage(
       foregroundImage,
       0,
-      cvs.height - foregroundImage.height,
+      cvs.height - FOREGROUND_HEIGHT,
       cvs.width,
-      foregroundImage.height
+      FOREGROUND_HEIGHT
     );
     //draw pipes
 
     for (let i = 0; i < this.pipes.length; i++) {
       this.ctx.drawImage(
         this.pipes[i].northPipeImage,
-        this.pipes[i].xPipe,
-        this.pipes[i].yPipe
+        this.pipes[i].xNorthPipe,
+        this.pipes[i].yNorthPipe,
+        this.pipes[i].northPipeImage.width,
+        this.pipes[i].ySouthPipe - PIPE_GAP
       );
       this.ctx.drawImage(
         this.pipes[i].southPipeImage,
-        this.pipes[i].xPipe,
-        this.pipes[i].yPipe + this.pipes[i].northPipeImage.height + PIPE_GAP
+        this.pipes[i].xSouthPipe,
+        this.pipes[i].ySouthPipe,
+        this.pipes[i].southPipeImage.width,
+        GAMEBOARD_HEIGHT - this.pipes[i].ySouthPipe - FOREGROUND_HEIGHT
       );
 
       //move pipe
-      this.pipes[i].xPipe--;
+      this.pipes[i].xNorthPipe--;
+      this.pipes[i].xSouthPipe--;
 
       //add new pipe
-      if (this.pipes[i].xPipe == PIPE_DISTANCE) {
+      if (this.pipes[i].xNorthPipe == PIPE_DISTANCE) {
         let newPipe = new Pipe();
         this.pipes.push(newPipe);
       }
 
       //add score
-      if (this.pipes[i].xPipe == DEFAULT_BIRD_X) {
+      if (this.pipes[i].xNorthPipe == DEFAULT_BIRD_X) {
         this.player.score++;
       }
 
       //check crash
       if (
         //crash the pipe
-        (this.bird.xBird + this.bird.birdImage.width >= this.pipes[i].xPipe &&
+        (this.bird.xBird + this.bird.birdImage.width >=
+          this.pipes[i].xNorthPipe &&
           this.bird.xBird <=
-            this.pipes[i].xPipe + this.pipes[i].northPipeImage.width &&
+            this.pipes[i].xNorthPipe + this.pipes[i].northPipeImage.width &&
           (this.bird.yBird <=
-            this.pipes[i].yPipe + this.pipes[i].northPipeImage.height ||
+            this.pipes[i].yNorthPipe + this.pipes[i].ySouthPipe - PIPE_GAP ||
             this.bird.yBird + this.bird.birdImage.height >=
-              this.pipes[i].yPipe +
-                this.pipes[i].northPipeImage.height.PIPE_GAP)) ||
+              this.pipes[i].yNorthPipe + this.pipes[i].ySouthPipe)) ||
         //crash the ground
         this.bird.yBird + this.bird.birdImage.height >=
-          GAMEBOARD_HEIGHT - foregroundImage.height
+          GAMEBOARD_HEIGHT - FOREGROUND_HEIGHT
       ) {
         window.location.reload(true); // reload the page
       }
       //delete passed pipe
-      if (this.pipes[i].xPipe < 0) {
+      if (this.pipes[i].xNorthPipe < 0) {
         this.pipes.slice(i, 1);
       }
       //draw score
@@ -136,11 +145,10 @@ function Board(cvs, bird, pipe, player) {
 }
 function init() {
   let cvs = document.getElementById("canvas");
-  let bird = new Bird();
+  let bird = new Bird(DEFAULT_BIRD_X, DEFAULT_BIRD_Y);
   let pipe = new Pipe(cvs);
   let player = new Player();
   let board = new Board(cvs, bird, pipe, player);
-  let isLoaded = false;
   let model = null;
   document.addEventListener("keydown", bird.jump);
   // Load the model.
