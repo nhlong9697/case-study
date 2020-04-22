@@ -173,7 +173,6 @@ function init() {
         bird.yBird -= JUMP;
         console.log(bird.yBird);
       }
-      isLoaded = true;
       requestAnimationFrame(runDetection);
     });
   }
