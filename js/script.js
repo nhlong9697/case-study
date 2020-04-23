@@ -59,6 +59,7 @@ function Player() {
   this.reset = () => {
     this.score = 0;
   };
+  //TODO: save highscore
 }
 
 function Board(cvs, bird, pipe, player) {
@@ -171,7 +172,6 @@ function init() {
     model = lmodel;
     handTrack.startVideo(video).then((status) => {
       console.log("video started", status);
-
       if (status) {
         board.start();
         runDetection();
@@ -186,7 +186,6 @@ function init() {
       if (predictions.length > 0) {
         console.log("hand found");
         bird.yBird -= JUMP;
-        console.log(bird.yBird);
       }
       requestAnimationFrame(runDetection);
     });
