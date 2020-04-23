@@ -35,6 +35,10 @@ function Bird(xBird, yBird) {
       this.yBird -= JUMP;
     }
   };
+  this.reset = () => {
+    this.xBird = DEFAULT_BIRD_X;
+    this.yBird = DEFAULT_BIRD_Y;
+  };
 }
 
 function Pipe(cvs) {
@@ -52,6 +56,9 @@ function Pipe(cvs) {
 
 function Player() {
   this.score = 0;
+  this.reset = () => {
+    this.score = 0;
+  };
 }
 
 function Board(cvs, bird, pipe, player) {
@@ -79,7 +86,6 @@ function Board(cvs, bird, pipe, player) {
       FOREGROUND_HEIGHT
     );
     //draw pipes
-
     for (let i = 0; i < this.pipes.length; i++) {
       this.ctx.drawImage(
         this.pipes[i].northPipeImage,
@@ -126,7 +132,8 @@ function Board(cvs, bird, pipe, player) {
         this.bird.yBird + this.bird.birdImage.height >=
           GAMEBOARD_HEIGHT - FOREGROUND_HEIGHT
       ) {
-        window.location.reload(true); // reload the page
+        //reset if crash
+        this.reset();
       }
       //delete passed pipe
       if (this.pipes[i].xNorthPipe < 0) {
@@ -141,6 +148,13 @@ function Board(cvs, bird, pipe, player) {
     }
 
     requestAnimationFrame(this.start);
+  };
+  this.reset = () => {
+    this.bird.reset();
+    this.player.reset();
+    this.pipes = [];
+    let newPipe = new Pipe();
+    this.pipes.push(newPipe);
   };
 }
 function init() {
@@ -157,12 +171,13 @@ function init() {
     model = lmodel;
     handTrack.startVideo(video).then((status) => {
       console.log("video started", status);
+
       if (status) {
+        board.start();
         runDetection();
       }
     });
   });
-  board.start();
 
   function runDetection() {
     model.detect(video).then((predictions) => {
@@ -177,4 +192,3 @@ function init() {
     });
   }
 }
-//fix bug later regarding score issue
